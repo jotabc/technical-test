@@ -1,29 +1,22 @@
-import React, { useState } from 'react'
+import { Item, ItemId } from './components/Item'
+import { useItems } from './hooks/useItems'
+
 import './App.css'
+import { useSEO } from './hooks/useSeo'
 
-type ItemId = `${string}-${string}-${string}-${string}-${string}`
-
-interface Item {
+export interface Item {
   id: ItemId
   timestamp: number
   text: string
 }
 
-const INITIAL_ITEMS: Item[] = [
-  {
-    id: crypto.randomUUID(),
-    timestamp: Date.now(),
-    text: 'Videojuegos'
-  },
-  {
-    id: crypto.randomUUID(),
-    timestamp: Date.now(),
-    text: 'Libros'
-  }
-]
-
 function App() {
-  const [items, setItems] = useState(INITIAL_ITEMS)
+  const { items, addItem, removeItem } = useItems()
+
+  useSEO({
+    title: `[${items.length}] - Prueba tecnica de React`,
+    description: 'Añadir y eliminar elementos de una lista'
+  })
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -43,23 +36,13 @@ function App() {
     const isInput = input instanceof HTMLInputElement
     if (!isInput || input === null) return null
 
-    const newItem = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      text: input.value
-    }
-
-    setItems((prevItems) => {
-      return [...prevItems, newItem]
-    })
+    addItem(input.value)
 
     input.value = ''
   }
 
   const handleRemoveItem = (id: ItemId) => () => {
-    setItems((prevItems) => {
-      return prevItems.filter(currentItem => currentItem.id !== id)
-    })
+    removeItem(id)
   }
 
   return (
@@ -67,7 +50,7 @@ function App() {
       <aside>
         <h1>Prueba tecnica de React</h1>
         <h2>Añadir y eliminar elementos de una lista</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-label='Añadir elementos a la lista'>
           <label htmlFor="">
             Elemento a introducir
             <input type='text' name='item' required placeholder='Videojuegos...' />
@@ -84,14 +67,7 @@ function App() {
             <ul>
               {
                 items.map(item => {
-                  return (
-                    <li key={item.id}>
-                      {item.text}
-                      <button onClick={handleRemoveItem(item.id)}>
-                        Eliminar elemento
-                      </button>
-                    </li>
-                  )
+                  return <Item handleClick={handleRemoveItem(item.id)} {...item} key={item.id} />
                 })
               }
             </ul>
@@ -104,3 +80,5 @@ function App() {
 }
 
 export default App
+
+// UN REFACTOR GRANDE EN UNA APP TIENE QUE TENER O SER EN BASE A UN TEST SIEMPRE.
